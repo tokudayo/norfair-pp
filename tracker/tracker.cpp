@@ -1,34 +1,11 @@
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/numpy.h>
-#include "Eigen/Dense"
-
-#define FLOAT_T float
-
-using namespace Eigen;
-namespace py = pybind11;
-
-typedef std::vector<Point> PointArray;
-typedef Matrix<FLOAT_T, Dynamic, 2> PointMatrix;
-
-struct Point {
-    FLOAT_T x, y;
-    Point(FLOAT_T x, FLOAT_T y) : x(x), y(y) {};
-};
-
-inline PointMatrix PointArrayToMatrix(PointArray& src) {
-    PointMatrix dst(src.size());
-    for (size_t i = 0; i < src.size(); i++) {
-        dst(i, 0) = src[i].x;
-        dst(i, 1) = src[i].y;
-    }
-    return dst;
-}
+#include <vector>
+#include <iostream>
+#include "common.h"
+#include <tracked_object.h>
 
 class Tracker 
 {
 public:
-
     Tracker(FLOAT_T dist_threshold,
             int hit_inertia_min = 10,
             int hit_inertia_max = 25,
@@ -93,8 +70,8 @@ public:
             }
         }
 
-        unmatched_dets, det_obj_pair_r1 = 
-            UpdateObjectInPlace(initializing_objs, detections);
+        // unmatched_dets, det_obj_pair_r1 = 
+        //     UpdateObjectInPlace(initializing_objs, detections);
                 
 
     }
