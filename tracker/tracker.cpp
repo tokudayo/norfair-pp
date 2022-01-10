@@ -103,8 +103,10 @@ public:
 
         // Calculate distance between detections and objects
         MatrixXf dist_matrix = MatrixXf::Zero(detections.size(), objects.size());
-        for (int i = 0; i < detections.size(); i++) {
-            for (int j = 0; j < objects.size(); j++) {
+        for (int i = 0; i < detections.size(); i++) 
+        {
+            for (int j = 0; j < objects.size(); j++) 
+            {
                 dist_matrix(i, j) = (detections[i].point - objects[j]->estimate()).norm();
             }
         };        
@@ -120,8 +122,10 @@ public:
 
         // Flatten the distance matrix and sort by distance in ascending order
         // In the future, maybe pass in a long vector instead of a matrix
-        for (int i = 0; i < num_dets; i++) {
-            for (int j = 0; j < num_objs; j++) {
+        for (int i = 0; i < num_dets; i++) 
+        {
+            for (int j = 0; j < num_objs; j++) 
+            {
                 dist_flattened.push_back(std::make_pair(i*num_objs + j, dist_matrix(i, j)));
             }
         }
@@ -148,9 +152,8 @@ public:
 
         // Find unmatched detections
         for (int i = 0; i < num_dets; i++) {
-            if (matched_dets.find(i) == matched_dets.end()) {
+            if (matched_dets.find(i) == matched_dets.end()) 
                 unmatched_dets.push_back(i);
-            }
         }
         return {det_obj_pairs, unmatched_dets};
     } 
