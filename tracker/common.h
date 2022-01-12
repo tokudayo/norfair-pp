@@ -15,6 +15,12 @@ struct Detection
 {
     Point point;
     int ID;
+    
+    Detection(Point point, int ID)
+    {
+        this->point = point;
+        this->ID = ID;
+    }
 };
 
 inline PointMatrix PointArrayToMatrix(PointArray& src) {

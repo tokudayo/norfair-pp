@@ -41,25 +41,32 @@ public:
     void Update(PointArray* detections = nullptr, int period = 1)
     {
         this->period = period;
-
+        // Create instances of detections from the point array
+        std::vector<Detection> dets = std::vector<Detection>();
         if (detections != nullptr) 
         {
+            for (size_t i = 0; i < detections->size(); i++) 
+            {
+                dets.emplace_back((*detections)[i], i);
+            }
         }
-        std::vector<TrackedObject> a;
-        // Update tracked object list
+
+        // Update self tracked object list by removing those without inertia
         for (int i = 0; i < tracked_objects.size(); i++) 
         {
-            if (tracked_objects[i].has_inertia()) 
+            if (!tracked_objects[i].has_inertia()) 
             {
                 tracked_objects.erase(tracked_objects.begin() + i);
             }
         }
 
-        // Update tracker
+        // Update state of tracked objects
         for (auto obj : tracked_objects) 
         {
             obj.tracker_step();
         }
+
+        // Divide tracked objects into 2 groups for matching
         std::vector<TrackedObject*> initializing_objs;
         std::vector<TrackedObject*> initialized_objs;
 
@@ -74,12 +81,41 @@ public:
             }
         }
 
-        // unmatched_dets, det_obj_pair_r1 = 
-        //     UpdateObjectInPlace(initializing_objs, detections);
-                
+        // Match detections to initializing objects
+        auto match_result_r1 = UpdateObjectInPlace(initializing_objs, dets);
+        auto match_result_r2 = UpdateObjectInPlace(initialized_objs, dets);
+
+        // Map results
+
+        // Create new tracked objects from yet unmatched detections
+        for (auto d : match_result_r2.unmatched_detections) 
+        {
+            TrackedObject obj(d, this->nextID++);
+            obj.set_hit_inertia(this->init_delay);
+            obj.set_hit_count(this->initial_hit_count);
+            obj.set_point_transience(this->point_transience);
+            this->tracked_objects.push_back(obj);
+        }
+
+        // Finish initialization of new tracked objects
+        for (auto obj : tracked_objects) {
+            if (!obj.is_initializing() && obj.ID == -1) {
+                obj.ID = this->nextID++;
+            }
+        }
+
+        return map_result;
 
     }
 
+    /**
+     * @brief Calculate and return index of matched det-obj pairs and unmatched dets
+     * 
+     * @param objects 
+     * @param detections 
+     * @return tuple<vector<pair<int, int>>, vector<int>>
+     *         A tuple of matched det-obj pairs and unmatched dets
+     */
     std::tuple<std::vector<std::pair<int, int>>, std::vector<int>> 
     UpdateObjectInPlace(
         const std::vector<TrackedObject*> &objects,
@@ -109,7 +145,7 @@ public:
             {
                 dist_matrix(i, j) = (detections[i].point - objects[j]->estimate()).norm();
             }
-        };        
+        };
 
         // Need to merge it with the above part later now im too lazy to do it
         
@@ -137,8 +173,10 @@ public:
 
         // Matching
         for (int i = 0; i < dist_flattened.size(); i++) {
-            if (dist_flattened[i].second > dist_threshold)
+            if (dist_flattened[i].second > dist_threshold) 
+            {
                 break;
+            }
             int det_idx = dist_flattened[i].first / dist_matrix.cols();
             int obj_idx = dist_flattened[i].first % dist_matrix.cols();
             if (matched_dets.find(det_idx) == matched_dets.end()
@@ -151,9 +189,12 @@ public:
         }
 
         // Find unmatched detections
-        for (int i = 0; i < num_dets; i++) {
+        for (int i = 0; i < num_dets; i++) 
+        {
             if (matched_dets.find(i) == matched_dets.end()) 
+            {
                 unmatched_dets.push_back(i);
+            }
         }
         return {det_obj_pairs, unmatched_dets};
     } 
