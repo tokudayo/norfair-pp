@@ -23,13 +23,13 @@ struct Detection
     }
 };
 
-inline PointMatrix PointArrayToMatrix(PointArray& src) {
-    PointMatrix dst(src.size());
-    for (size_t i = 0; i < src.size(); i++) {
-        dst(i, 0) = src[i](0);
-        dst(i, 1) = src[i](1);
-    }
-    return dst;
-}
+// inline PointMatrix PointArrayToMatrix(PointArray& src) {
+//     PointMatrix dst(src.size());
+//     for (size_t i = 0; i < src.size(); i++) {
+//         dst(i, 0) = src[i](0);
+//         dst(i, 1) = src[i](1);
+//     }
+//     return dst;
+// }
 
 
