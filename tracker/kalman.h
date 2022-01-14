@@ -50,9 +50,11 @@ public:
     Matrix<FLOAT_T, 4, 2> K;
     Matrix<FLOAT_T, 2, 1> y;
     Matrix<FLOAT_T, 2, 2> S;
-    Matrix<FLOAT_T, 4, 4> &F = F, &Q = Q, &I = I;
-    Matrix<FLOAT_T, 2, 2> &R = R;
-    Matrix<FLOAT_T, 2, 4> &H = H;
+    // Matrix<FLOAT_T, 4, 4> &F = F, &Q = Q, &I = I;
+    // Matrix<FLOAT_T, 2, 2> &R = R;
+    // Matrix<FLOAT_T, 2, 4> &H = H;
+
+    KalmanFilter() {};
 
     KalmanFilter(Point initial_detection):
         x(Matrix<FLOAT_T, 4, 1>::Zero()), P(Matrix<FLOAT_T, 4, 4>::Identity()),
@@ -62,14 +64,16 @@ public:
         this->P(2, 2) = _P;
         this->P(3, 3) = _P;
         this->x(0, 0) = initial_detection(0, 0);
-        this->x(1, 0) = initial_detection(1, 0);
+        this->x(1, 0) = initial_detection(0, 1);
         // Will this works?
         // this->x(seq(0, 1), all) = initial_detection.transpose();
     };
 
     void Predict() {
+        std::cout << "Starting prediction\n";
         x = F * x;
         P = F * P * F.transpose() + Q;
+        std::cout << "Finished prediction\n";
     }
 
     void Update(const Point& z) {

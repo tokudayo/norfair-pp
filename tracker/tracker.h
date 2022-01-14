@@ -32,6 +32,7 @@ public:
         }
         this->dist_threshold = dist_threshold;
         this->point_transience = point_transience;
+        std::cout << "Tracker initialization successful\n";
     }
 
     ~Tracker() 
@@ -39,18 +40,26 @@ public:
         std::cout << "~Tracker()" << std::endl;
     }
 
-    std::vector<int> Update(PointArray* detections = nullptr, int period = 1)
+    std::vector<int> Update(
+        std::vector<std::vector<FLOAT_T>> detections, 
+        int period = 1)
     {
         this->period = period;
         // Create instances of detections from the point array
         std::vector<Detection> dets = std::vector<Detection>();
-        if (detections != nullptr) 
-        {
-            for (size_t i = 0; i < detections->size(); i++) 
-            {
-                dets.emplace_back((*detections)[i], i);
+        if (detections.size()) {
+            for (int id = 0; id < detections.size(); id++) {
+                dets.emplace_back((Point({detections[id][0], detections[id][1]})), id);
             }
         }
+        // if (detections != nullptr) 
+        // {
+        //     for (size_t i = 0; i < detections->size(); i++) 
+        //     {
+        //         dets.emplace_back((*detections)[i], i);
+        //     }
+        // }
+        std::cout << "Creaated instances of detections\n";
 
         // Update self tracked object list by removing those without inertia
         for (int i = 0; i < tracked_objects.size(); i++) 
@@ -60,19 +69,23 @@ public:
                 tracked_objects.erase(tracked_objects.begin() + i);
             }
         }
+        std::cout << "Removed objects without inertia\n";
 
         // Update state of tracked objects
-        for (auto obj : tracked_objects) 
+        for (auto& obj : tracked_objects) 
         {
+            std::cout << "Updating object " << obj.ID << std::endl;
             obj.tracker_step();
+            std::cout << "OK\n";
         }
+        std::cout << "Updated state of tracked objects\n";
 
         // Divide tracked objects into 2 groups for matching.
         // I use pointers to avoid copying the objects, or maybe I don't need to.
         std::vector<TrackedObject*> initializing_objs;
         std::vector<TrackedObject*> initialized_objs;
 
-        for (auto obj : tracked_objects) 
+        for (auto& obj : tracked_objects) 
         {
             if (obj.is_initializing()) 
             {
@@ -105,10 +118,14 @@ public:
                 }
             }
         }
+        std::cout << "Matched detections to objects\n";
 
         // Create new tracked objects from yet unmatched detections
-        for (auto d : dets) 
+        int index = 0;
+        std::cout << dets.size() << std::endl;
+        for (auto& d : dets) 
         {
+            std::cout << index++ << "\n";
             tracked_objects.emplace_back(
                 d.point,
                 hit_inertia_min, hit_inertia_max,
@@ -117,12 +134,16 @@ public:
             );
         }
 
+        std::cout << "Created new tracked objects\n";
+
         // Finish initialization of new tracked objects
-        for (auto obj : tracked_objects) {
+        for (auto& obj : tracked_objects) {
             if (!obj.is_initializing() && obj.ID == -1) {
                 obj.ID = this->nextID++;
             }
         }
+
+        std::cout << "Finished initialization of new tracked objects\n\n\n";
 
         return map_result;
 

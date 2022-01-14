@@ -8,13 +8,14 @@ public:
         point_hit_inertia_min, point_hit_inertia_max, intial_period, hit_counter,
         point_hit_counter, dim_z, ID;
 
-    KalmanFilter* filter;
+    KalmanFilter filter;
 
     TrackedObject(Point initial_detection, int hit_intertia_min,
                   int hit_intertia_max, int init_delay,
                   int initial_hit_count, int point_transience,
                   int period)
     {
+        std::cout << "Calling constructor on " << this << std::endl;
         this->hit_inertia_min = hit_intertia_min;
         this->hit_inertia_max = hit_intertia_max;
         this->init_delay = init_delay;
@@ -31,22 +32,26 @@ public:
         FLOAT_T last_distance = -1.;
         // this->age = 0;
         this->ID = -1;
-        this->filter = new KalmanFilter(initial_detection);
+        std::cout << "Initializing Kalman filter\n";
+        this->filter = KalmanFilter(initial_detection);
         this->dim_z = 2;
         m_is_initializing_flag = true;
         m_detected_at_least_once = false;
+        std::cout << "Initialized TrackedObject\n";
     };
 
     ~TrackedObject()
     {
-        delete filter;
+        std::cout << "Calling destructor on " << this << "\n";
+        // delete filter;
     }
 
     void tracker_step()
     {
         hit_counter -= 1;
         point_hit_counter -= 1;
-        filter->Predict();
+        filter.Predict();
+        std::cout << "Finished prediction\n";
     }
 
     bool is_initializing()
@@ -66,7 +71,7 @@ public:
 
     Point estimate()
     {
-        return filter->x.transpose()(seq(fix<0>, fix<0>), seq(fix<0>, fix<1>));
+        return filter.x.transpose()(seq(fix<0>, fix<0>), seq(fix<0>, fix<1>));
     }
 
     void Hit(Point detection, int det_id, int period = 1)
@@ -78,12 +83,12 @@ public:
         point_hit_counter += 2*period;
         point_hit_counter = std::max(0, point_hit_counter);
         point_hit_counter = std::min(point_hit_counter, point_hit_inertia_max);
-        filter->Update(detection);
+        filter.Update(detection);
         if (!m_detected_at_least_once)
         {
             m_detected_at_least_once = true;
-            filter->x(2, 0) = 0;
-            filter->x(2, 1) = 0;
+            filter.x(2, 0) = 0;
+            filter.x(2, 1) = 0;
         }
 
     }
