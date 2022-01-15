@@ -23,12 +23,19 @@ public:
         this->hit_inertia_max = hit_inertia_max;
         this->hit_inertia_min = hit_inertia_min;
         this->nextID = 0;
-        if (init_delay >= 0 && init_delay < hit_inertia_max - hit_inertia_min) 
-        {
+        if (init_delay >= 0) 
+        { 
             this->init_delay = init_delay;
         } else 
         {
             this->init_delay = (hit_inertia_max - hit_inertia_min) / 2;
+        }
+        if (initial_hit_count == -1) 
+        {
+            this->initial_hit_count = this->hit_inertia_max/2;
+        } else 
+        {
+            this->initial_hit_count = initial_hit_count;
         }
         this->dist_threshold = dist_threshold;
         this->point_transience = point_transience;
@@ -44,6 +51,7 @@ public:
         std::vector<std::vector<FLOAT_T>> detections, 
         int period = 1)
     {
+        std::cout << "Tracked objects size: " << tracked_objects.size() << " detections size: " << detections.size() << std::endl;
         this->period = period;
         // Create instances of detections from the point array
         std::vector<Detection> dets = std::vector<Detection>();
@@ -52,33 +60,24 @@ public:
                 dets.emplace_back((Point({detections[id][0], detections[id][1]})), id);
             }
         }
-        // if (detections != nullptr) 
-        // {
-        //     for (size_t i = 0; i < detections->size(); i++) 
-        //     {
-        //         dets.emplace_back((*detections)[i], i);
-        //     }
-        // }
-        std::cout << "Creaated instances of detections\n";
 
         // Update self tracked object list by removing those without inertia
-        for (int i = 0; i < tracked_objects.size(); i++) 
-        {
-            if (!tracked_objects[i].has_inertia()) 
-            {
+        int i = 0;
+        while (i < tracked_objects.size()) {
+            if (!tracked_objects[i].has_inertia()) {
+                std::cout << "Erasing an object lol\n";
                 tracked_objects.erase(tracked_objects.begin() + i);
+            } else {
+                i++;
             }
         }
-        std::cout << "Removed objects without inertia\n";
 
         // Update state of tracked objects
         for (auto& obj : tracked_objects) 
         {
             std::cout << "Updating object " << obj.ID << std::endl;
             obj.tracker_step();
-            std::cout << "OK\n";
         }
-        std::cout << "Updated state of tracked objects\n";
 
         // Divide tracked objects into 2 groups for matching.
         // I use pointers to avoid copying the objects, or maybe I don't need to.
@@ -87,6 +86,7 @@ public:
 
         for (auto& obj : tracked_objects) 
         {
+            std::cout << "Checking object state\n";
             if (obj.is_initializing()) 
             {
                 initialized_objs.push_back(&obj);
@@ -118,7 +118,6 @@ public:
                 }
             }
         }
-        std::cout << "Matched detections to objects\n";
 
         // Create new tracked objects from yet unmatched detections
         int index = 0;
@@ -134,16 +133,15 @@ public:
             );
         }
 
-        std::cout << "Created new tracked objects\n";
 
         // Finish initialization of new tracked objects
         for (auto& obj : tracked_objects) {
             if (!obj.is_initializing() && obj.ID == -1) {
+                std::cout << "NEW OBJECT\n";
                 obj.ID = this->nextID++;
             }
         }
 
-        std::cout << "Finished initialization of new tracked objects\n\n\n";
 
         return map_result;
 
@@ -164,10 +162,14 @@ public:
     {
         int num_dets = detections.size();
         int num_objs = objects.size();
+        std::cout << "Updateing objects with " << num_objs << " objects and " << num_dets << " detections\n";
+        
+        // Handle special cases
         if (num_dets == 0) 
         {
             return std::unordered_map<int, int>();
         }
+
         if (num_objs == 0)
         {
             std::vector<int> unmatched_dets = std::vector<int>();
@@ -178,39 +180,43 @@ public:
             return std::unordered_map<int, int>();
         }
 
-        // Calculate distance between detections and objects
-        MatrixXf dist_matrix = MatrixXf::Zero(detections.size(), objects.size());
-        for (int i = 0; i < detections.size(); i++) 
+        // Trivial case
+        std::vector< std::pair<int, double> > dist_flattened;
+        for (int i = 0; i < num_dets; i++) 
         {
-            for (int j = 0; j < objects.size(); j++) 
+            for (int j = 0; j < num_objs; j++) 
             {
-                dist_matrix(i, j) = (detections[i].point - objects[j]->estimate()).norm();
+                std::cout << "Point: " << detections[i].point << " Object: " << objects[j]->estimate() << std::endl;
+                dist_flattened.emplace_back(
+                    std::make_pair(
+                        i*num_objs + j,
+                        (detections[i].point - objects[j]->estimate()).norm()
+                    )
+                );
             }
-        };
+        }
 
-        // Need to merge it with the above part later now im too lazy to do it
+        std::cout << "Flattened distances " << dist_flattened.size() << std::endl;
         
         // To keep track of matched pairs
         std::unordered_map<int, int> det_obj_pairs;
         std::vector<int> unmatched_dets;
         std::vector<int> matched_dets, matched_objs = {};
-        std::vector< std::pair<int, float> > dist_flattened;
         
 
-        // Flatten the distance matrix and sort by distance in ascending order
-        // In the future, maybe pass in a long vector instead of a matrix
-        for (int i = 0; i < num_dets; i++) 
-        {
-            for (int j = 0; j < num_objs; j++) 
-            {
-                dist_flattened.push_back(std::make_pair(i*num_objs + j, dist_matrix(i, j)));
-            }
-        }
+        // Sort by distance in ascending order
         std::sort(dist_flattened.begin(), dist_flattened.end(), [](
-            const std::pair<int, float> &a,
-            const std::pair<int, float> &b) {
+            const std::pair<int, double> &a,
+            const std::pair<int, double> &b) {
                 return a.second < b.second;
             });
+
+        std::cout << "Sorted\n";
+        for (auto &p : dist_flattened) 
+        {
+            std::cout << p.first << " " << p.second << "   ";
+        }
+        std::cout << std::endl;
 
         // Matching
         for (int i = 0; i < dist_flattened.size(); i++) {
@@ -218,13 +224,15 @@ public:
             {
                 break;
             }
-            int det_idx = dist_flattened[i].first / dist_matrix.cols();
-            int obj_idx = dist_flattened[i].first % dist_matrix.cols();
+            int det_idx = dist_flattened[i].first / num_objs;
+            int obj_idx = dist_flattened[i].first % num_objs;
             if (std::find(matched_dets.begin(), matched_dets.end(), det_idx) == matched_dets.end()
                 && std::find(matched_objs.begin(), matched_objs.end(), obj_idx) == matched_objs.end()) 
             {
                 matched_dets.push_back(det_idx);
                 matched_objs.push_back(obj_idx);
+                std::cout << "Updating object " << objects[obj_idx]->ID << " with detection " << detections[det_idx].ID << "\n";
+                objects[obj_idx]->Hit(detections[det_idx].point);
             }
         }
 
@@ -246,7 +254,6 @@ public:
         {
             det_obj_pairs[detections[matched_dets[i]].ID] = objects[matched_objs[i]]->ID;
         }
-
         return det_obj_pairs;
     } 
 

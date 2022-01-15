@@ -15,14 +15,13 @@ public:
                   int initial_hit_count, int point_transience,
                   int period)
     {
-        std::cout << "Calling constructor on " << this << std::endl;
         this->hit_inertia_min = hit_intertia_min;
         this->hit_inertia_max = hit_intertia_max;
         this->init_delay = init_delay;
         this->initial_hit_count = initial_hit_count;
         this->point_hit_inertia_min = floor(hit_inertia_min / point_transience);
         this->point_hit_inertia_max = floor(hit_inertia_max / point_transience);
-        if (this->point_hit_inertia_max - this->point_hit_inertia_min)
+        if (this->point_hit_inertia_max - this->point_hit_inertia_min < period)
         {
             this->point_hit_inertia_max = this->point_hit_inertia_min + period;
         }
@@ -32,17 +31,14 @@ public:
         FLOAT_T last_distance = -1.;
         // this->age = 0;
         this->ID = -1;
-        std::cout << "Initializing Kalman filter\n";
         this->filter = KalmanFilter(initial_detection);
         this->dim_z = 2;
         m_is_initializing_flag = true;
         m_detected_at_least_once = false;
-        std::cout << "Initialized TrackedObject\n";
     };
 
     ~TrackedObject()
     {
-        std::cout << "Calling destructor on " << this << "\n";
         // delete filter;
     }
 
@@ -51,12 +47,13 @@ public:
         hit_counter -= 1;
         point_hit_counter -= 1;
         filter.Predict();
-        std::cout << "Finished prediction\n";
     }
 
     bool is_initializing()
     {
-        if (m_is_initializing_flag && hit_counter > hit_inertia_min + init_delay)
+        // std::cout << "Hit counter: " << hit_counter << " point hit counter: " << point_hit_counter << std::endl;
+        if (m_is_initializing_flag 
+            && hit_counter > hit_inertia_min + init_delay)
         {
             m_is_initializing_flag = false;
             hit_counter = initial_hit_count;
@@ -74,7 +71,7 @@ public:
         return filter.x.transpose()(seq(fix<0>, fix<0>), seq(fix<0>, fix<1>));
     }
 
-    void Hit(Point detection, int det_id, int period = 1)
+    void Hit(Point detection, int period = 1)
     {
         if (hit_counter < hit_inertia_max)
         {
@@ -88,9 +85,8 @@ public:
         {
             m_detected_at_least_once = true;
             filter.x(2, 0) = 0;
-            filter.x(2, 1) = 0;
+            filter.x(3, 0) = 0;
         }
-
     }
 
 private:

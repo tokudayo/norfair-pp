@@ -12,9 +12,9 @@ inline static Matrix<FLOAT_T, 4, 4> CreateTransitionMatrix(FLOAT_T dt) {
 
 inline static Matrix<FLOAT_T, 2, 4> CreateMeasurementMatrix() {
     Matrix<FLOAT_T, 2, 4> measurement_matrix;
-    measurement_matrix = Matrix<FLOAT_T, 2, 4>::Identity();
-    // measurement_matrix << 1, 0, 0, 0,
-    //                       0, 1, 0, 0;
+    measurement_matrix = Matrix<FLOAT_T, 2, 4>();
+    measurement_matrix << 1, 0, 0, 0,
+                          0, 1, 0, 0;
     return measurement_matrix;
 }
 
@@ -70,10 +70,8 @@ public:
     };
 
     void Predict() {
-        std::cout << "Starting prediction\n";
         x = F * x;
-        P = F * P * F.transpose() + Q;
-        std::cout << "Finished prediction\n";
+        P = (F * P) * F.transpose() + Q;
     }
 
     void Update(const Point& z) {
