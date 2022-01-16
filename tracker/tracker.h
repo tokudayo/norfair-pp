@@ -7,6 +7,15 @@
 
 typedef std::vector<TrackedObject> TrackedObjArray;
 
+
+static void PrintMap(std::unordered_map<int, int> map)
+{
+    for (auto it = map.begin(); it != map.end(); ++it)
+    {
+        std::cout << it->first << " " << it->second << std::endl;
+    }
+}
+
 class Tracker 
 {
 public:
@@ -51,7 +60,7 @@ public:
         std::vector<std::vector<FLOAT_T>> detections, 
         int period = 1)
     {
-        std::cout << "Tracked objects size: " << tracked_objects.size() << " detections size: " << detections.size() << std::endl;
+        std::cout << "\nBegin update call\nTracker has " << tracked_objects.size() << " tracked objects, received " << detections.size() << " detections" << std::endl;
         this->period = period;
         // Create instances of detections from the point array
         std::vector<Detection> dets = std::vector<Detection>();
@@ -75,10 +84,10 @@ public:
         // Update state of tracked objects
         for (auto& obj : tracked_objects) 
         {
-            std::cout << "Updating object " << obj.ID << std::endl;
             obj.tracker_step();
         }
 
+        std::cout << "Before partitioning, tracker has " << tracked_objects.size() << " tracked objects" << std::endl;
         // Divide tracked objects into 2 groups for matching.
         // I use pointers to avoid copying the objects, or maybe I don't need to.
         std::vector<TrackedObject*> initializing_objs;
@@ -89,20 +98,26 @@ public:
             std::cout << "Checking object state\n";
             if (obj.is_initializing()) 
             {
-                initialized_objs.push_back(&obj);
+                initializing_objs.push_back(&obj);
             } else 
             {
-                initializing_objs.push_back(&obj);
+                initialized_objs.push_back(&obj);
             }
         }
 
         // Match detections to initializing objects
-        auto match_result_r1 = UpdateObjectInPlace(initializing_objs, dets);
+        std::cout << "Matching round 1 have " << initialized_objs.size() << " objects, " << dets.size() << " detections" << std::endl;
         auto match_result_r2 = UpdateObjectInPlace(initialized_objs, dets);
+        std::cout << "Matching round 2 have " << initializing_objs.size() << " objects, " << dets.size() << " detections" << std::endl;
+        auto match_result_r1 = UpdateObjectInPlace(initializing_objs, dets);
 
         // Map results
+        std::cout << "First map:\n";
+        PrintMap(match_result_r1);
+        std::cout << "Second map:\n";
+        PrintMap(match_result_r2);
         std::vector<int> map_result = std::vector<int>();
-        for (int i = 0; i < dets.size(); i++) 
+        for (int i = 0; i < detections.size(); i++) 
         {
             if (match_result_r1.find(i) != match_result_r1.end()) 
             {
@@ -120,11 +135,10 @@ public:
         }
 
         // Create new tracked objects from yet unmatched detections
-        int index = 0;
-        std::cout << dets.size() << std::endl;
+        int index = 1;
         for (auto& d : dets) 
         {
-            std::cout << index++ << "\n";
+            std::cout << "Creating " << index++ << " new detection" << "\n";
             tracked_objects.emplace_back(
                 d.point,
                 hit_inertia_min, hit_inertia_max,
@@ -142,6 +156,11 @@ public:
             }
         }
 
+        std::cout << "Final results:\n";
+        for (auto idx : map_result) {
+            std::cout << idx << " ";
+        }
+        std::cout << std::endl;
 
         return map_result;
 
@@ -162,7 +181,6 @@ public:
     {
         int num_dets = detections.size();
         int num_objs = objects.size();
-        std::cout << "Updateing objects with " << num_objs << " objects and " << num_dets << " detections\n";
         
         // Handle special cases
         if (num_dets == 0) 
@@ -211,12 +229,6 @@ public:
                 return a.second < b.second;
             });
 
-        std::cout << "Sorted\n";
-        for (auto &p : dist_flattened) 
-        {
-            std::cout << p.first << " " << p.second << "   ";
-        }
-        std::cout << std::endl;
 
         // Matching
         for (int i = 0; i < dist_flattened.size(); i++) {
@@ -231,21 +243,8 @@ public:
             {
                 matched_dets.push_back(det_idx);
                 matched_objs.push_back(obj_idx);
-                std::cout << "Updating object " << objects[obj_idx]->ID << " with detection " << detections[det_idx].ID << "\n";
                 objects[obj_idx]->Hit(detections[det_idx].point);
-            }
-        }
-
-        // Find unmatched detections
-        int idx = 0;
-        for (int i = 0; i < num_dets; i++) 
-        {
-            if (std::find(matched_dets.begin(), matched_dets.end(), i) == matched_dets.end()) 
-            {
-                detections.erase(detections.begin() + idx);
-            } else
-            {
-                idx++;
+                std::cout << "Matched " << det_idx << " to " << obj_idx << std::endl;
             }
         }
 
@@ -254,6 +253,20 @@ public:
         {
             det_obj_pairs[detections[matched_dets[i]].ID] = objects[matched_objs[i]]->ID;
         }
+
+        // Remove matched detections
+        int idx = 0;
+        for (int i = 0; i < num_dets; i++) 
+        {
+            if (std::find(matched_dets.begin(), matched_dets.end(), i) != matched_dets.end()) 
+            {
+                detections.erase(detections.begin() + idx);
+            } else
+            {
+                idx++;
+            }
+        }
+        
         return det_obj_pairs;
     } 
 
