@@ -2,7 +2,9 @@
 #include "common.h"
 #include "kalman.h"
 
-class TrackedObject {
+
+class TrackedObject
+{
 public:
     int hit_inertia_min, hit_inertia_max, init_delay, initial_hit_count, 
         point_hit_inertia_min, point_hit_inertia_max, intial_period, hit_counter,
@@ -29,7 +31,6 @@ public:
         this->hit_counter = hit_inertia_min + period;
         this->point_hit_counter = this->point_hit_inertia_min;
         FLOAT_T last_distance = -1.;
-        // this->age = 0;
         this->ID = -1;
         this->filter = KalmanFilter(initial_detection);
         this->dim_z = 2;
@@ -39,7 +40,6 @@ public:
 
     ~TrackedObject()
     {
-        // delete filter;
     }
 
     void tracker_step()
@@ -51,7 +51,6 @@ public:
 
     bool is_initializing()
     {
-        // std::cout << "Hit counter: " << hit_counter << " point hit counter: " << point_hit_counter << std::endl;
         if (m_is_initializing_flag 
             && hit_counter > hit_inertia_min + init_delay)
         {
