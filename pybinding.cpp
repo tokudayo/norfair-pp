@@ -4,7 +4,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(norfair_cpp, m) {
+PYBIND11_MODULE(norfair_pp, m) {
     py::class_<Tracker>(m, "Tracker")
         .def(py::init<FLOAT_T, int, int, int, int, int>())
         .def("update", &Tracker::Update);
