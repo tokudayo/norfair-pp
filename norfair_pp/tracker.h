@@ -28,17 +28,15 @@ public:
     int init_delay;
     int initial_hit_count;
     int period;
-    int point_transience;
 
     Tracker(FLOAT_T dist_threshold,
             int hit_inertia_min = 10,
             int hit_inertia_max = 25,
             int init_delay = -1,
-            int initial_hit_count = -1,
-            int point_transience = -1):
+            int initial_hit_count = -1):
         tracked_objects(std::vector<TrackedObject>()), dist_threshold(dist_threshold),
         hit_inertia_min(hit_inertia_min), hit_inertia_max(hit_inertia_max),
-        nextID(0), period(1), point_transience(point_transience)
+        nextID(0), period(1)
     {
         if (init_delay >= 0) 
         { 
@@ -148,8 +146,7 @@ public:
             tracked_objects.emplace_back(
                 d.point,
                 hit_inertia_min, hit_inertia_max,
-                init_delay, initial_hit_count,
-                point_transience, period
+                init_delay, initial_hit_count, period
             );
         }
 
