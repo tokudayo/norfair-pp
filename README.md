@@ -1,4 +1,4 @@
-# Norfair C++
+# Norfair++
 This is a C++ implementation of [Techainer's Norfair](https://github.com/Techainer/norfair), which originates from [Norfair](https://github.com/tryolabs/norfair), a library for real-time 2D object tracking.
 
 
@@ -13,15 +13,15 @@ This contains some more optimizations in tracker update functions and the use of
 ## Installation
 Clone this repository:
 ```shell
-git clone https://github.com/20toduc01/norfair-cpp.git
-cd norfair-cpp
+git clone https://github.com/20toduc01/norfair-pp.git
+cd norfair-pp
 ```
 
 This project requires [Eigen3](https://eigen.tuxfamily.org):
 ```shell
 curl https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip -o eigen-3.4.0.zip
 unzip eigen-3.4.0
-cp -r eigen-3.4.0/Eigen ./norfair_cpp/Eigen
+cp -r eigen-3.4.0/Eigen ./norfair_pp/Eigen
 rm -rf eigen-3.4.0*
 ```
 
