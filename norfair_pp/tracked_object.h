@@ -12,8 +12,7 @@ public:
 
     TrackedObject(const Point& initial_detection, int hit_intertia_min,
                   int hit_intertia_max, int init_delay,
-                  int initial_hit_count, int point_transience,
-                  int period):
+                  int initial_hit_count, int period):
         hit_inertia_min(hit_intertia_min), hit_inertia_max(hit_intertia_max),
         init_delay(init_delay), initial_hit_count(initial_hit_count), 
         hit_counter(hit_inertia_min + period), ID(-1),
