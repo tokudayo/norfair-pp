@@ -10,7 +10,7 @@ public:
     initial_hit_count, hit_counter, ID;
     KalmanFilter filter;
 
-    TrackedObject(Point initial_detection, int hit_intertia_min,
+    TrackedObject(const Point& initial_detection, int hit_intertia_min,
                   int hit_intertia_max, int init_delay,
                   int initial_hit_count, int point_transience,
                   int period):

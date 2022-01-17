@@ -63,8 +63,6 @@ public:
         this->P(3, 3) = _P;
         this->x(0, 0) = initial_detection(0, 0);
         this->x(1, 0) = initial_detection(0, 1);
-        // Will this works?
-        // this->x(seq(0, 1), all) = initial_detection.transpose();
     };
 
     void Predict()
@@ -80,6 +78,8 @@ public:
         S = H * PHT + R;
         K = PHT * S.inverse();
         x += K * y;
+        // auto I_KH = I - K * H;
+        // P = (I_KH*P)*I_KH.transpose() + (K*R)*K.transpose();
         P = (I - K * H) * P;
     }
 };
