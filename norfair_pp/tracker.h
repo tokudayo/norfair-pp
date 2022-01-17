@@ -11,28 +11,35 @@ struct Detection
     Point point;
     int ID;
     
-    Detection(Point point, int ID)
+    Detection(Point point, int ID):
+        point(point), ID(ID)
     {
-        this->point = point;
-        this->ID = ID;
     }
 };
-
 
 class Tracker 
 {
 public:
+    std::vector<TrackedObject> tracked_objects;
+    FLOAT_T dist_threshold;
+    int hit_inertia_min;
+    int hit_inertia_max;
+    int nextID;
+    int init_delay;
+    int initial_hit_count;
+    int period;
+    int point_transience;
+
     Tracker(FLOAT_T dist_threshold,
             int hit_inertia_min = 10,
             int hit_inertia_max = 25,
             int init_delay = -1,
             int initial_hit_count = -1,
-            int point_transience = -1)
+            int point_transience = -1):
+        tracked_objects(std::vector<TrackedObject>()), dist_threshold(dist_threshold),
+        hit_inertia_min(hit_inertia_min), hit_inertia_max(hit_inertia_max),
+        nextID(0), period(1), point_transience(point_transience)
     {
-        this->tracked_objects = std::vector<TrackedObject>();
-        this->hit_inertia_max = hit_inertia_max;
-        this->hit_inertia_min = hit_inertia_min;
-        this->nextID = 0;
         if (init_delay >= 0) 
         { 
             this->init_delay = init_delay;
@@ -48,14 +55,21 @@ public:
         {
             this->initial_hit_count = initial_hit_count;
         }
-        this->dist_threshold = dist_threshold;
-        this->point_transience = point_transience;
     }
 
     ~Tracker()
     {
     }
 
+    /**
+     * @brief Update the state of tracker with new detections and return a list
+     * of object ID corresponding to each box
+     * 
+     * @param detection
+     * @param period
+     * @return A list of numbers corresponding to the ID of each detection.
+     * A number is non-negative if a match is found or -1 otherwise.
+     */
     std::vector<int> Update(
         std::vector<std::array<FLOAT_T, 2>> detections, 
         int period = 1)
@@ -106,8 +120,8 @@ public:
         }
 
         // Match detections to initializing objects
-        auto match_result_r2 = UpdateObjectInPlace(initialized_objs, dets);
-        auto match_result_r1 = UpdateObjectInPlace(initializing_objs, dets);
+        auto match_result_r1 = UpdateObjectInPlace(initialized_objs, dets);
+        auto match_result_r2 = UpdateObjectInPlace(initializing_objs, dets);
 
         // Map results
         std::vector<int> map_result = std::vector<int>();
@@ -139,7 +153,6 @@ public:
             );
         }
 
-
         // Finish initialization of new tracked objects
         for (auto& obj : tracked_objects)
         {
@@ -157,10 +170,9 @@ public:
      * @brief Calculate and return index of matched det-obj pairs. Also remove
      * matched detections from the detection list.
      * 
-     * @param objects 
-     * @param detections 
-     * @return tuple<vector<pair<int, int>>, vector<int>>
-     *         A tuple of matched det-obj pairs and unmatched dets
+     * @param objects
+     * @param detections
+     * @return A detection ID <--> object ID map.
      */
     std::unordered_map<int, int> UpdateObjectInPlace(
         const std::vector<TrackedObject*> &objects,
@@ -204,7 +216,6 @@ public:
         std::unordered_map<int, int> det_obj_pairs;
         std::vector<int> unmatched_dets;
         std::vector<int> matched_dets, matched_objs = {};
-        
 
         // Sort by distance in ascending order
         std::sort(dist_flattened.begin(), dist_flattened.end(), [](
@@ -212,7 +223,6 @@ public:
             const std::pair<int, FLOAT_T> &b) {
                 return a.second < b.second;
             });
-
 
         // Matching
         for (size_t i = 0; i < dist_flattened.size(); i++)
@@ -253,16 +263,4 @@ public:
 
         return det_obj_pairs;
     }
-
-
-private:
-    std::vector<TrackedObject> tracked_objects;
-    FLOAT_T dist_threshold;
-    int hit_inertia_min;
-    int hit_inertia_max;
-    int nextID;
-    int init_delay;
-    int initial_hit_count;
-    int period;
-    int point_transience;
 };

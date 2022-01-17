@@ -1,6 +1,7 @@
 #pragma once
 #include "common.h"
 
+
 inline static Matrix<FLOAT_T, 4, 4> CreateTransitionMatrix(FLOAT_T dt) 
 {
     Matrix<FLOAT_T, 4, 4> transition_matrix;
@@ -14,7 +15,6 @@ inline static Matrix<FLOAT_T, 4, 4> CreateTransitionMatrix(FLOAT_T dt)
 inline static Matrix<FLOAT_T, 2, 4> CreateMeasurementMatrix() 
 {
     Matrix<FLOAT_T, 2, 4> measurement_matrix;
-    measurement_matrix = Matrix<FLOAT_T, 2, 4>();
     measurement_matrix << 1, 0, 0, 0,
                           0, 1, 0, 0;
     return measurement_matrix;
@@ -38,14 +38,12 @@ inline static Matrix<FLOAT_T, 2, 2> CreateMeasurementUncertaintyMatrix(FLOAT_T r
     return measurement_uncertainty_matrix;
 }
 
-
 static const FLOAT_T _R = 4.0, _Q = 0.1, _P = 10.0, _dt = 1.0;
 static const Matrix<FLOAT_T, 4, 4> F = CreateTransitionMatrix(_dt);
 static const Matrix<FLOAT_T, 2, 4> H = CreateMeasurementMatrix();
 static const Matrix<FLOAT_T, 4, 4> Q = CreateProcessUncertaintyMatrix(_Q);
 static const Matrix<FLOAT_T, 2, 2> R = CreateMeasurementUncertaintyMatrix(_R);
 static const Matrix<FLOAT_T, 4, 4> I = Matrix<FLOAT_T, 4, 4>::Identity();
-
 
 class KalmanFilter
 {
@@ -56,11 +54,7 @@ public:
     Matrix<FLOAT_T, 2, 1> y;
     Matrix<FLOAT_T, 2, 2> S;
 
-    KalmanFilter()
-    {
-    };
-
-    KalmanFilter(Point initial_detection):
+    KalmanFilter(const Point& initial_detection):
         x(Matrix<FLOAT_T, 4, 1>::Zero()), P(Matrix<FLOAT_T, 4, 4>::Identity()),
         K(Matrix<FLOAT_T, 4, 2>::Zero()), y(Matrix<FLOAT_T, 2, 1>::Zero()),
         S(Matrix<FLOAT_T, 2, 2>::Zero())
