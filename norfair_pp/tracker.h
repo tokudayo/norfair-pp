@@ -65,7 +65,7 @@ public:
         std::vector<Detection> dets = std::vector<Detection>();
         if (detections.size())
         {
-            for (int id = 0; id < detections.size(); id++)
+            for (size_t id = 0; id < detections.size(); id++)
             {
                 dets.emplace_back(
                     Point({detections[id][0], detections[id][1]}), id
@@ -74,14 +74,14 @@ public:
         }
 
         // Update self tracked object list by removing those without inertia
-        int i = 0;
-        while (i < tracked_objects.size())
+        size_t idx = 0;
+        while (idx < tracked_objects.size())
         {
-            if (!tracked_objects[i].has_inertia())
+            if (!tracked_objects[idx].has_inertia())
             {
-                tracked_objects.erase(tracked_objects.begin() + i);
+                tracked_objects.erase(tracked_objects.begin() + idx);
             }
-            else i++;
+            else idx++;
         }
 
         // Update state of tracked objects
@@ -111,7 +111,7 @@ public:
 
         // Map results
         std::vector<int> map_result = std::vector<int>();
-        for (int i = 0; i < detections.size(); i++)
+        for (size_t i = 0; i < detections.size(); i++)
         {
             if (match_result_r1.find(i) != match_result_r1.end())
             {
@@ -166,8 +166,8 @@ public:
         const std::vector<TrackedObject*> &objects,
         std::vector<Detection> &detections) 
     {
-        int num_dets = detections.size();
-        int num_objs = objects.size();
+        size_t num_dets = detections.size();
+        size_t num_objs = objects.size();
         
         // Handle special cases
         if (num_dets == 0) 
@@ -178,7 +178,7 @@ public:
         if (num_objs == 0)
         {
             std::vector<int> unmatched_dets = std::vector<int>();
-            for (int i = 0; i < num_dets; i++) 
+            for (size_t i = 0; i < num_dets; i++) 
             {
                 unmatched_dets.push_back(detections[i].ID);
             }
@@ -187,9 +187,9 @@ public:
 
         // Trivial case
         std::vector< std::pair<int, FLOAT_T> > dist_flattened;
-        for (int i = 0; i < num_dets; i++) 
+        for (size_t i = 0; i < num_dets; i++) 
         {
-            for (int j = 0; j < num_objs; j++) 
+            for (size_t j = 0; j < num_objs; j++) 
             {
                 dist_flattened.emplace_back(
                     std::make_pair(
@@ -215,7 +215,7 @@ public:
 
 
         // Matching
-        for (int i = 0; i < dist_flattened.size(); i++)
+        for (size_t i = 0; i < dist_flattened.size(); i++)
         {
             if (dist_flattened[i].second > dist_threshold) 
             {
@@ -233,14 +233,14 @@ public:
         }
 
         // Map local indices to global indices
-        for (int i = 0; i < matched_dets.size(); i++) 
+        for (size_t i = 0; i < matched_dets.size(); i++) 
         {
             det_obj_pairs[detections[matched_dets[i]].ID] = objects[matched_objs[i]]->ID;
         }
 
         // Remove matched detections
         int idx = 0;
-        for (int i = 0; i < num_dets; i++) 
+        for (size_t i = 0; i < num_dets; i++) 
         {
             if (std::find(matched_dets.begin(), matched_dets.end(), i) != matched_dets.end()) 
             {

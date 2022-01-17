@@ -30,7 +30,6 @@ public:
         this->intial_period = period;
         this->hit_counter = hit_inertia_min + period;
         this->point_hit_counter = this->point_hit_inertia_min;
-        FLOAT_T last_distance = -1.;
         this->ID = -1;
         this->filter = KalmanFilter(initial_detection);
         this->dim_z = 2;
