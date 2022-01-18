@@ -1,4 +1,6 @@
 # Norfair++
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/123NTUk6jwIJgf_VHJXC4-0RQWATET5xJ?usp=sharing)
+
 This is a C++ implementation of [Techainer's Norfair](https://github.com/Techainer/norfair), which originates from [Norfair](https://github.com/tryolabs/norfair), a library for real-time 2D object tracking.
 
 
