@@ -37,3 +37,11 @@ Then run `setup.py`:
 ```shell
 python3 setup.py install
 ```
+
+## Usage and demo
+Check out [this Colab notebook](https://colab.research.google.com/drive/123NTUk6jwIJgf_VHJXC4-0RQWATET5xJ?usp=sharing) and [the result video](https://www.youtube.com/watch?v=GPeYwYejRUQ).
+
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=GPeYwYejRUQ" target="_blank">
+ <img src="http://img.youtube.com/vi/GPeYwYejRUQ/mqdefault.jpg" alt="Watch the video" width="427" height="240" border="30" />
+</a>
