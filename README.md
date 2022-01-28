@@ -13,9 +13,9 @@ Its function is identical to Techainer's version:
 This contains some more optimizations in tracker update functions and the use of Kalman filter. Overall, the Python binding for this C++ implementation offers a ~10x speedup compared to Techainer's fork, which was already much faster than the original Norfair (for the above use case).
 
 ## Installation
-This project requires [Eigen3](https://eigen.tuxfamily.org) and [pybind11](https://github.com/pybind/pybind11) which can be easily installed with conda:
+This project requires [Eigen 3.4.0](https://eigen.tuxfamily.org) and [pybind11](https://github.com/pybind/pybind11) which can be easily installed with conda:
 ```shell
-conda install -c conda-forge eigen pybind11
+conda install -c conda-forge eigen=3.4.0 pybind11
 ```
 Then, install the project with pip:
 ```shell
