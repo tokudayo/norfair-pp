@@ -131,4 +131,3 @@ test.*
 Eigen
 *.so
 .vscode
-*.txt
